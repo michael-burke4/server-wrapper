@@ -29,11 +29,18 @@ int process(char *buffer, struct user_msg *message);
 int main(void)
 {
 	char **argv;
-	pid_t ppid_before_fork;
-	pid_t pid;
+	pid_t ppid_before_fork, pid;
 	int server_input[2], server_output[2];
 	char buffer[BUFFSIZE];
 	ssize_t num_read;
+	struct user_msg msg = {
+		.time = NULL,
+		.user = NULL,
+		.message = NULL,
+		.time_space = 0,
+		.user_space = 0,
+		.message_space = 0
+	};
 
 	argv = malloc(5 * sizeof(char *));
 	argv[0] = "java";
@@ -71,14 +78,6 @@ int main(void)
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
 
-	struct user_msg msg = {
-		.time = NULL,
-		.user = NULL,
-		.message = NULL,
-		.time_space = 0,
-		.user_space = 0,
-		.message_space = 0
-	};
 
 	while ((num_read = read(server_output[READ_END], buffer, BUFFSIZE))) {
 		printf("%s", buffer);
@@ -98,6 +97,11 @@ int main(void)
 
 int process(char *buffer, struct user_msg *msg_struct)
 {
+	size_t i; // index of the username
+	size_t j; // index of the end of the message statement
+	size_t user_message_size;
+	size_t server_msg_len;
+
 	if (buffer == NULL || buffer[0] != '[') {
 		return -1;
 	}
@@ -114,10 +118,9 @@ int process(char *buffer, struct user_msg *msg_struct)
 		return -1;
 	}
 
-	size_t i; // index of the username
 	for (i = SERVER_MSG_SIZE; buffer[i] != '>'; i++)
 		;
-	size_t user_message_size = i - SERVER_MSG_SIZE - 1;
+	user_message_size = i - SERVER_MSG_SIZE - 1;
 	if (user_message_size > msg_struct->user_space) {
 		printf("reallocing user pointer...\n");
 		msg_struct->user = realloc(msg_struct->user, (user_message_size + 1) * sizeof(char));
@@ -127,10 +130,9 @@ int process(char *buffer, struct user_msg *msg_struct)
 	msg_struct->user[user_message_size] = '\0';
 
 	i += 2; // moves index from end of username to beginning of message
-	size_t j; // index of the end of the message statement
 	for (j = i; buffer[j] != '\0'; j++)
 		;
-	size_t server_msg_len = j - i;
+	server_msg_len = j - i;
 	if (server_msg_len > msg_struct->message_space) {
 		printf("reallocing message pointer...\n");
 		msg_struct->message = realloc(msg_struct->message, (server_msg_len + 1) * sizeof(char));

@@ -1,0 +1,4 @@
+*.o
+controller
+mc_server/*
+*.swp

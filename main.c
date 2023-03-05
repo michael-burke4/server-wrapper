@@ -11,6 +11,9 @@
 
 #define READ_END 0
 #define WRITE_END 1
+#define BUFFSIZE 2048
+
+
 
 
 int main(void)
@@ -19,6 +22,9 @@ int main(void)
 	pid_t ppid_before_fork;
 	pid_t pid;
 	int server_input[2], server_output[2];
+	char *hello_msg = "say hello\n";
+	char buffer[BUFFSIZE];
+	ssize_t num_read;
 
 
 	argv = malloc(5 * sizeof (char *));
@@ -59,17 +65,12 @@ int main(void)
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
 
-	char *hello_msg = "say hello\n";
-	char buffer[1024];
 
-	while(1) {
-		sleep(30);
-		printf("\nparent still goin...\n");
-		write(server_input[WRITE_END], hello_msg, strlen(hello_msg));
-		//printf("after write\n");
-		printf("%d\n", errno);
-		//if(0 != read(server_output[WRITE_END], buffer, sizeof(buffer))){
-			//printf("%s\n", buffer);
-		//}
+	while (1) {
+		while(num_read = read(server_output[READ_END], buffer, BUFFSIZE)) {
+			printf("%s", buffer);
+			if(errno) printf("error: %s\n", strerror(errno));
+		}
+
 	}
 }

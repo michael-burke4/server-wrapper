@@ -74,13 +74,14 @@ int main(void)
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
 
-	struct user_msg msg;
-	msg.time = NULL;
-	msg.user = NULL;
-	msg.message = NULL;
-	msg.time_space = 0;
-	msg.user_space = 0;
-	msg.message_space = 0;
+	struct user_msg msg = {
+		.time = NULL,
+		.user = NULL,
+		.message = NULL,
+		.time_space = 0,
+		.user_space = 0,
+		.message_space = 0
+	};
 
 	while((num_read = read(server_output[READ_END], buffer, BUFFSIZE))) {
 		printf("%s", buffer);

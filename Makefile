@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Weverything -std=c99
+CFLAGS = -Weverything
 BIN = controller
 
 $(BIN): main.o mcserver.o discbot.o

@@ -8,13 +8,18 @@
 #include <string.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #define BUFFSIZE 2048
 
+void set_read_nonblocking(int fd[]);
+
 int main(void)
 {
+	struct timespec read_wait = {0, 1000L};
 	pid_t ppid_before_fork, pid;
 	int server_input[2], server_output[2];
 	int discord_input[2], discord_output[2];
@@ -28,12 +33,15 @@ int main(void)
 		.user_space = 0,
 		.message_space = 0
 	};
+	//char[4] discord_prefix = "<MC>";
+	//char[4] 
 
 	ppid_before_fork = getpid();
 	if (pipe(server_input) == -1)
 		err(1, "bad pipe!");
 	if (pipe(server_output) == -1)
 		err(1, "bad pipe!");
+	set_read_nonblocking(server_output);
 	pid = fork();
 	if (pid == -1)
 		err(1, "bad fork!");
@@ -48,6 +56,7 @@ int main(void)
 		err(1, "bad pipe!");
 	if (pipe(discord_output) == -1)
 		err(1, "bad pipe!");
+	set_read_nonblocking(discord_output);
 	pid = fork();
 	if (pid == -1)
 		err(1, "bad fork!");
@@ -57,9 +66,24 @@ int main(void)
 	close(discord_input[READ_END]);
 	close(discord_output[WRITE_END]);
 
-	while ((num_read = read(server_output[READ_END], buffer, BUFFSIZE))) {
+	while (1) {
 		// FIXME: using this (old) implementation prints the occasional garbage char.
 		// printf("%s", buffer);
+		nanosleep(&read_wait, NULL);
+
+		num_read = read(discord_output[READ_END], discord_buffer, BUFFSIZE);
+		if(num_read > 0){
+			for (int i = 0; i < num_read; ++i) {
+			// band-aid fix to above FIXME
+			printf("%c", discord_buffer[i]);
+			// printf("i: %d buffer[i]: %c %d\n", i, buffer[i], buffer[i]); // debug stuff ignore
+			discord_buffer[i] = '\0';
+			}
+		}
+		
+		num_read = read(server_output[READ_END], buffer, BUFFSIZE);
+		//printf("ERRNO: %d\n", errno);
+		if (num_read <= 0) continue;
 
 		if (0 == parse_server_output(buffer, &msg)) {
 			printf("%s said: %s", msg.user, msg.message);
@@ -70,7 +94,10 @@ int main(void)
 			// printf("i: %d buffer[i]: %c %d\n", i, buffer[i], buffer[i]); // debug stuff ignore
 			buffer[i] = '\0';
 		}
-		if (errno)
-			printf("error: %s\n", strerror(errno));
 	}
+}
+
+void set_read_nonblocking(int fd[]) {
+	fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
+	// fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
 }

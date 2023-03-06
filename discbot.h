@@ -1,6 +1,7 @@
 #ifndef DISCBOT_H
 #define DISCBOT_H
 
+#define MC_TAG "<MC>"
 #include <sys/types.h>
 
 #define READ_END 0

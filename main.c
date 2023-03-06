@@ -2,16 +2,16 @@
 #include "mcserver.h"
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #define BUFFSIZE 2048
 
@@ -19,7 +19,7 @@ void set_read_nonblocking(int fd[]);
 
 int main(void)
 {
-	struct timespec read_wait = {0, 1000L};
+	struct timespec read_wait = { 0, 1000L };
 	pid_t ppid_before_fork, pid;
 	int server_input[2], server_output[2];
 	int discord_input[2], discord_output[2];
@@ -33,8 +33,6 @@ int main(void)
 		.user_space = 0,
 		.message_space = 0
 	};
-	//char[4] discord_prefix = "<MC>";
-	//char[4] 
 
 	ppid_before_fork = getpid();
 	if (pipe(server_input) == -1)
@@ -72,18 +70,24 @@ int main(void)
 		nanosleep(&read_wait, NULL);
 
 		num_read = read(discord_output[READ_END], discord_buffer, BUFFSIZE);
-		if(num_read > 0){
-			for (int i = 0; i < num_read; ++i) {
-			// band-aid fix to above FIXME
-			printf("%c", discord_buffer[i]);
-			// printf("i: %d buffer[i]: %c %d\n", i, buffer[i], buffer[i]); // debug stuff ignore
-			discord_buffer[i] = '\0';
+		if (num_read > 0) {
+			if (strncmp(MC_TAG, discord_buffer, strlen(MC_TAG)) == 0) {
+				// size_t cast is ok because we checked if num_read > 0
+				write(server_input[WRITE_END], &(discord_buffer[4]), (size_t)num_read - 4);
+			} else {
+				for (int i = 0; i < num_read; ++i) {
+					// band-aid fix to above FIXME
+					printf("%c", discord_buffer[i]);
+					// printf("i: %d buffer[i]: %c %d\n", i, buffer[i], buffer[i]); // debug stuff ignore
+					discord_buffer[i] = '\0';
+				}
 			}
 		}
-		
+
 		num_read = read(server_output[READ_END], buffer, BUFFSIZE);
-		//printf("ERRNO: %d\n", errno);
-		if (num_read <= 0) continue;
+		// printf("ERRNO: %d\n", errno);
+		if (num_read <= 0)
+			continue;
 
 		if (0 == parse_server_output(buffer, &msg)) {
 			printf("%s said: %s", msg.user, msg.message);
@@ -97,7 +101,8 @@ int main(void)
 	}
 }
 
-void set_read_nonblocking(int fd[]) {
+void set_read_nonblocking(int fd[])
+{
 	fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
 	// fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
 }

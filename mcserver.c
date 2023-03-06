@@ -77,7 +77,7 @@ void run_server_process(int server_in[], int server_out[], pid_t parent_pid)
 
 	if (r == -1)
 		err(1, "parent process exited before prctl...");
-	if (chdir("./mc_server"))
+	if (chdir(MINECRAFT_PATH))
 		err(1, "could not change directory! do you have a directory called 'mc_server'?");
 	if (getppid() != parent_pid)
 		err(1, "child process was adopted. not continuing...");

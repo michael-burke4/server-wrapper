@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -Weverything -std=c99
 BIN = controller
 
-$(BIN): main.o mcserver.o
+$(BIN): main.o mcserver.o discbot.o
 	$(CC) $^ -o $@
 %.o: %.[ch]
 	$(CC) -c $< -o $@ $(CFLAGS)

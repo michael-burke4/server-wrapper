@@ -1,3 +1,4 @@
+#include "discbot.h"
 #include "mcserver.h"
 #include <err.h>
 #include <errno.h>
@@ -16,7 +17,8 @@ int main(void)
 {
 	pid_t ppid_before_fork, pid;
 	int server_input[2], server_output[2];
-	char buffer[BUFFSIZE + 1];
+	int discord_input[2], discord_output[2];
+	char buffer[BUFFSIZE + 1], discord_buffer[BUFFSIZE + 1];
 	ssize_t num_read;
 	struct user_msg msg = {
 		.time = NULL,
@@ -40,6 +42,20 @@ int main(void)
 	}
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
+
+	ppid_before_fork = getpid();
+	if (pipe(discord_input) == -1)
+		err(1, "bad pipe!");
+	if (pipe(discord_output) == -1)
+		err(1, "bad pipe!");
+	pid = fork();
+	if (pid == -1)
+		err(1, "bad fork!");
+	if (!pid) { // in child process...
+		run_discord_process(discord_input, discord_output, ppid_before_fork);
+	}
+	close(discord_input[READ_END]);
+	close(discord_output[WRITE_END]);
 
 	while ((num_read = read(server_output[READ_END], buffer, BUFFSIZE))) {
 		// FIXME: using this (old) implementation prints the occasional garbage char.

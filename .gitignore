@@ -1,4 +1,5 @@
 *.o
 controller
 mc_server/*
+discord_bot/*
 *.swp

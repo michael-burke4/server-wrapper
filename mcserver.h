@@ -6,6 +6,7 @@
 #define READ_END 0
 #define WRITE_END 1
 #define SERVER_MSG_SIZE 33
+#define MINECRAFT_PATH "./mc_server"
 
 struct user_msg {
 	char *time;

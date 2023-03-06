@@ -36,7 +36,7 @@ int main(void)
 	if (pid == -1)
 		err(1, "bad fork!");
 	if (!pid) { // in child process...
-		run_child_process(server_input, server_output, ppid_before_fork);
+		run_server_process(server_input, server_output, ppid_before_fork);
 	}
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
@@ -45,7 +45,7 @@ int main(void)
 		// FIXME: using this (old) implementation prints the occasional garbage char.
 		// printf("%s", buffer);
 
-		if (0 == process(buffer, &msg)) {
+		if (0 == parse_server_output(buffer, &msg)) {
 			printf("%s said: %s", msg.user, msg.message);
 		}
 		for (int i = 0; i < num_read; ++i) {

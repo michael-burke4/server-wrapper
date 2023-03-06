@@ -7,7 +7,7 @@
 #include <sys/prctl.h>
 #include <unistd.h>
 
-int process(char *buffer, struct user_msg *msg_struct)
+int parse_server_output(char *buffer, struct user_msg *msg_struct)
 {
 	size_t i; // index of the username
 	size_t j; // index of the end of the message statement
@@ -55,7 +55,7 @@ int process(char *buffer, struct user_msg *msg_struct)
 	return 0;
 }
 
-void run_child_process(int server_in[], int server_out[], pid_t parent_pid)
+void run_server_process(int server_in[], int server_out[], pid_t parent_pid)
 {
 	char **argv;
 	int r;

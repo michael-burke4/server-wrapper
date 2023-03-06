@@ -16,7 +16,7 @@ struct user_msg {
 	size_t message_space;
 };
 
-int process(char *buffer, struct user_msg *message);
-void run_child_process(int server_in[], int server_out[], pid_t parent_pid);
+int parse_server_output(char *buffer, struct user_msg *message);
+void run_server_process(int server_in[], int server_out[], pid_t parent_pid);
 
 #endif

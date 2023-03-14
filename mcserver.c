@@ -54,33 +54,3 @@ int parse_server_output(char *buffer, struct user_msg *msg_struct)
 	msg_struct->message[server_msg_len] = '\0';
 	return 0;
 }
-
-void run_server_process(int server_in[], int server_out[], pid_t parent_pid)
-{
-	char **argv;
-	int r;
-	// this is dynamic b/c we will eventually support non-hardcoded
-	// stuff. Different flags, etc.
-	argv = malloc(5 * sizeof(char *));
-	argv[0] = "java";
-	argv[1] = "-jar";
-	argv[2] = "server.jar";
-	argv[3] = "nogui";
-	argv[4] = NULL;
-
-	dup2(server_in[READ_END], STDIN_FILENO);
-	dup2(server_out[WRITE_END], STDOUT_FILENO);
-
-	// took a bunch of code form this SO page for sending term signal to child process on parent exit
-	// https://stackoverflow.com/questions/284325/how-to-make-child-process-die-after-parent-exits/17589555#17589555
-	r = prctl(PR_SET_PDEATHSIG, SIGTERM);
-
-	if (r == -1)
-		err(1, "parent process exited before prctl...");
-	if (chdir(MINECRAFT_PATH))
-		err(1, "could not change directory! do you have a directory called 'mc_server'?");
-	if (getppid() != parent_pid)
-		err(1, "child process was adopted. not continuing...");
-	if (execvp(argv[0], argv))
-		err(1, "bad exec");
-}

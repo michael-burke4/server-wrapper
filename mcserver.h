@@ -3,8 +3,6 @@
 
 #include <sys/types.h>
 
-#define READ_END 0
-#define WRITE_END 1
 #define SERVER_MSG_SIZE 33
 #define MINECRAFT_PATH "./mc_server"
 
@@ -18,6 +16,5 @@ struct user_msg {
 };
 
 int parse_server_output(char *buffer, struct user_msg *message);
-void run_server_process(int server_in[], int server_out[], pid_t parent_pid);
 
 #endif

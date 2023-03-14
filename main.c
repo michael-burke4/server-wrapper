@@ -1,5 +1,6 @@
-#include "discbot.h"
+// #include "discbot.h"
 #include "mcserver.h"
+#include "puppet.h"
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,6 +15,7 @@
 #include <unistd.h>
 
 #define BUFFSIZE 2048
+#define MC_TAG "<MC>"
 
 void set_read_nonblocking(int fd[]);
 
@@ -44,7 +46,8 @@ int main(void)
 	if (pid == -1)
 		err(1, "bad fork!");
 	if (!pid) { // in child process...
-		run_server_process(server_input, server_output, ppid_before_fork);
+		char *argv[] = {"java", "-jar", "server.jar", "nogui", NULL};
+		run_puppet_process(server_input, server_output, ppid_before_fork, argv, "./mc_server");
 	}
 	close(server_input[READ_END]);
 	close(server_output[WRITE_END]);
@@ -59,7 +62,8 @@ int main(void)
 	if (pid == -1)
 		err(1, "bad fork!");
 	if (!pid) { // in child process...
-		run_discord_process(discord_input, discord_output, ppid_before_fork);
+		char *argv[] = {"node", "app.js", NULL};
+		run_puppet_process(discord_input, discord_output, ppid_before_fork, argv, "./discord_bot");
 	}
 	close(discord_input[READ_END]);
 	close(discord_output[WRITE_END]);
@@ -104,5 +108,4 @@ int main(void)
 void set_read_nonblocking(int fd[])
 {
 	fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
-	// fcntl(fd[READ_END], F_SETFL, O_NONBLOCK);
 }

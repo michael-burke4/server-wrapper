@@ -2,9 +2,9 @@ CC = clang
 CFLAGS = -Weverything
 BIN = controller
 
-$(BIN): main.o mcserver.o discbot.o
+$(BIN): main.o mcserver.o puppet.o
 	$(CC) $^ -o $@
-%.o: %.c *.h
+%.o: %.c %.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 format:
 	clang-format -i -style=file *.[ch]
